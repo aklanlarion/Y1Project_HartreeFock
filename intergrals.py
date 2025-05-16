@@ -35,3 +35,5 @@ def overlap(m,n):
     input: m, n - indeces of functions
     '''
     return
+
+#wrirte all teh values out for each integral into a file
