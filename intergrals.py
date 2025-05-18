@@ -3,10 +3,16 @@ This file contains the integrals and forms the matrices from the input values
 '''
 
 #necessary packages
+import sys 
 import numpy as np
+from scipy import special
 
 #input files - basis, num of electrons, separation, etc
 
+def gauss_product(A, B):
+    # Most of the integrals involve taking the product between two Gaussians.
+
+    return
 
 def one_electron_kinetic(r,s):
     '''

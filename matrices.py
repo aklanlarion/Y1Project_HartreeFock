@@ -4,7 +4,9 @@ and outputs functions containing the matrix operations.
 '''
 
 #necessary libraries
+import sys
 import numpy as np
+from scipy import linalg
 
 #import the integrals
 import intergrals as int
