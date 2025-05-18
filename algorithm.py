@@ -5,7 +5,6 @@ functions performing the operations, and its output is a .cube file.
 
 #importing necessary packages
 import numpy as np
-from scipy import linalg
 
 #import the matrices package
 import matrices

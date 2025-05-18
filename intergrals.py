@@ -6,13 +6,19 @@ This file contains the integrals and forms the matrices from the input values
 import sys 
 import numpy as np
 from scipy import special
+from scipy import linalg
 
 #input files - basis, num of electrons, separation, etc
 
-def gauss_product(A, B):
+def gauss_product(Gaussian_1, Gaussian_2):
     # Most of the integrals involve taking the product between two Gaussians.
-
-    return
+    alpha, R_a = Gaussian_1
+    beta, R_b = Gaussian_2
+    p = alpha + beta
+    R_p = (alpha * R_a + beta * R_b) / p
+    R_sep = np.linalg.norm(R_a - R_b)**2
+    K = np.exp( -alpha*beta/p * R_sep)
+    return p, R_p, R_sep, K
 
 def one_electron_kinetic(r,s):
     '''
