@@ -18,8 +18,8 @@ class contracted_gaussians():
         self.coords = coords
         self.Normalisation = (2*alpha/np.pi)**0.75
 
-atomic_coordinates = [np.array([0,0,0])]
-atomic_masses = [2]
+atomic_coordinates = [np.array([0,0,0])] #Add the coordinates of each atom, using known bond lengths
+atomic_masses = [2] #Add the masses of each atom, making sure they're in the same order as above
 assert len(atomic_coordinates) == len(atomic_masses)
 
 He_cg1a = contracted_gaussians(0.6362421394E+01, 0.1543289673E+00, atomic_coordinates[0])
@@ -56,17 +56,17 @@ def V_ne(Slater_bases, atomic_coordinates, atomic_masses):
                         V += int.one_electron_potential(Slater_bases[i][k], Slater_bases[j][l], atomic_coordinates[m], atomic_masses[m])
     return V
 
-V = V_ne(Slater_bases, atomic_coordinates, atomic_masses)
-print(V)
+#V = V_ne(Slater_bases, atomic_coordinates, atomic_masses)
+#print(V)
 
-def H_core(Slater_bases): #Kinetic and Nuclear-Electron Potential
-    T = T(Slater_bases)
+def H_core(Slater_bases, atomic_coordinates, atomic_masses): #Kinetic and Nuclear-Electron Potential
+    Kinetic = T(Slater_bases)
     V = V_ne(Slater_bases, atomic_coordinates, atomic_masses)
-    H_core = T + V
+    H_core = Kinetic + V
     return H_core
 
-#H_core = H_core(Slater_bases)
-#print(H_core)
+H_core = H_core(Slater_bases, atomic_coordinates, atomic_masses)
+print(H_core)
 
 def Overlap_matrix(Slater_bases):
     S = np.zeros([nbasis, nbasis])
@@ -86,8 +86,37 @@ def Overlap_matrix(Slater_bases):
 def Transformation_matrix():
     return
 
-def G_matrix():
-    return
+def V_ee(Slater_bases):
+    V_elecelec = np.zeros([nbasis, nbasis, nbasis, nbasis])
+    for i in range(nbasis):
+        for j in range(nbasis):
+            for k in range(nbasis):
+                for l in range(nbasis):
+                    n_contracted_i = len(Slater_bases[i])
+                    n_contracted_j = len(Slater_bases[j])
+                    n_contracted_k = len(Slater_bases[k])
+                    n_contracted_l = len(Slater_bases[l])
+
+                    for ii in range(n_contracted_i):
+                        for jj in range(n_contracted_j):
+                            for kk in range(n_contracted_k):
+                                for ll in range(n_contracted_l):
+                                    V_elecelec[i, j, k, l] += int.two_electron(Slater_bases[i][ii], Slater_bases[j][jj], Slater_bases[k][kk], Slater_bases[l][ll])
+    return V_elecelec
+
+#V_elecelec = V_ee(Slater_bases)
+#print(V_elecelec)
+
+def G_matrix(density_matrix, V_ee):
+    G = np.zeros([nbasis, nbasis])
+    for i in range(nbasis):
+        for j in range(nbasis):
+            for k in range(nbasis):
+                for l in range(nbasis):
+                    J = V_ee[i, j, k, l]
+                    K = V_ee[i, l, k, j]
+                    G[i, j] += density_matrix[k, l] * (J - 0.5*K)
+    return G
 
 def Fock_matrx(H_core, G_matrix):
     return H_core + G_matrix
