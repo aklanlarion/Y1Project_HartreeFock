@@ -78,4 +78,16 @@ def overlap(Gaussian_1,Gaussian_2):
     N = N_a * N_b * d_a * d_b
     return N*(np.pi/p)**1.5*K
 
+def nuclear_repulsion(atomic_masses, atomic_coordinates):
+    natoms = len(atomic_masses)
+    E_nn = 0 
+    if natoms == 1:
+        return 0
+    else:
+        for i in range(natoms):
+            for j in range(i, natoms):
+                Rij = np.linalg.norm(atomic_coordinates[i] - atomic_coordinates[j])
+                E_nn += atomic_masses[i]*atomic_masses[j]/Rij
+        return E_nn
+
 #wrirte all teh values out for each integral into a file

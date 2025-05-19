@@ -59,14 +59,18 @@ def V_ne(Slater_bases, atomic_coordinates, atomic_masses):
 #V = V_ne(Slater_bases, atomic_coordinates, atomic_masses)
 #print(V)
 
-def H_core(Slater_bases, atomic_coordinates, atomic_masses): #Kinetic and Nuclear-Electron Potential
+def H_core(Slater_bases, atomic_coordinates, atomic_masses):
+    '''
+    Kinetic, nuclear-nuclear, and nuclear-electron repulsion
+    '''
     Kinetic = T(Slater_bases)
-    V = V_ne(Slater_bases, atomic_coordinates, atomic_masses)
-    H_core = Kinetic + V
+    V_nucec = V_ne(Slater_bases, atomic_coordinates, atomic_masses) 
+    V_nn = int.nuclear_repulsion(atomic_masses, atomic_coordinates)
+    H_core = Kinetic + V_nucec + V_nn
     return H_core
 
 H_core = H_core(Slater_bases, atomic_coordinates, atomic_masses)
-print(H_core)
+#print(H_core)
 
 def Overlap_matrix(Slater_bases):
     S = np.zeros([nbasis, nbasis])
