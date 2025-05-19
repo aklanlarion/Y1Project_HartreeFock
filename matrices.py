@@ -43,11 +43,23 @@ def H_core(Slater_bases): #Kinetic and Nuclear-Electron Potential
 
     return H_core
 
-H_core = H_core(Slater_bases)
-print(H_core)
+#H_core = H_core(Slater_bases)
+#print(H_core)
 
-def Overlap_matrix():
-    return
+def Overlap_matrix(Slater_bases):
+    S = np.zeros([nbasis, nbasis])
+    for i in range(nbasis):
+        for j in range(nbasis):
+            n_contracted_i = len(Slater_bases[i])
+            n_contracted_j = len(Slater_bases[j])
+
+            for k in range(n_contracted_i):
+                for l in range(n_contracted_j):
+                    S[i, j] += int.overlap(Slater_bases[i][k], Slater_bases[j][l])
+    return S
+
+#S = Overlap_matrix(Slater_bases)
+#print(S)
 
 def Transformation_matrix():
     return
