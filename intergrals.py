@@ -41,7 +41,7 @@ def one_electron_potential(Gaussian_1, Gaussian_2):
     This is function calculates the one-electron integral for the potential term (Z/r) and returns its numerical value.
     Inputs: r,s - indeces of the basis functions
     '''
-    return
+    return 0
 
 def two_electron(r,s,t,u):
     '''
