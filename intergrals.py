@@ -20,7 +20,8 @@ def gauss_product(Gaussian_1, Gaussian_2):
     R_p = (alpha * R_a + beta * R_b) / p
     R_sep = np.linalg.norm(R_a - R_b)**2
     K = np.exp( -alpha*beta/p * R_sep)
-    return p, R_p, R_sep, K
+    N = N_a * N_b * d_a * d_b
+    return p, R_p, R_sep, K, N
 
 def one_electron_kinetic(Gaussian_1, Gaussian_2):
     '''
@@ -29,19 +30,29 @@ def one_electron_kinetic(Gaussian_1, Gaussian_2):
     '''
     alpha, d_a, R_a, N_a = Gaussian_1.alpha, Gaussian_1.d, Gaussian_1.coords, Gaussian_1.Normalisation
     beta, d_b, R_b, N_b = Gaussian_2.alpha, Gaussian_2.d, Gaussian_2.coords, Gaussian_2.Normalisation
-    p, R_p, R_sep, K = gauss_product(Gaussian_1, Gaussian_2)
-    N = N_a * N_b * d_a * d_b
-    coeff1 = alpha * beta / p
-    coeff2 = 3 - 2*alpha*beta/p * R_sep
-    coeff3 = (np.pi/p)**1.5
-    return N*coeff1*coeff2*coeff3*K
+    p, R_p, R_sep, K, N = gauss_product(Gaussian_1, Gaussian_2)
+    Term1 = alpha * beta / p
+    Term2 = 3 - 2*alpha*beta/p * R_sep
+    Term3 = (np.pi/p)**1.5
+    return N*Term1*Term2*Term3*K
 
-def one_electron_potential(Gaussian_1, Gaussian_2):
+def boys(t):
+    # This variant of the boys function is needed to evaluate nuclear-electron potential
+    if t == 0:
+        return 1
+    else:
+        return 0.5 * (np.pi/t)**0.5 * special.erf(t**0.5)
+
+def one_electron_potential(Gaussian_1, Gaussian_2, R_c, Z):
     '''
     This is function calculates the one-electron integral for the potential term (Z/r) and returns its numerical value.
-    Inputs: r,s - indeces of the basis functions
+    Inputs are the two contracted gaussians, and the atomic mass and coordinate it is currently being interacted with
     '''
-    return 0
+    p, R_p, R_sep, K, N = gauss_product(Gaussian_1, Gaussian_2)
+    Term1 = -2*np.pi/p*Z
+    boys_input = p * np.linalg.norm(R_p - R_c)**2
+    Term2 = boys(boys_input)
+    return N*Term1*K*Term2
 
 def two_electron(r,s,t,u):
     '''
@@ -50,11 +61,15 @@ def two_electron(r,s,t,u):
     '''
     return
 
-def overlap(m,n):
+def overlap(Gaussian_1,Gaussian_2):
     '''
     Returns the overlap matrix of the basis set
     input: m, n - indeces of functions
     '''
-    return
+    p, R_p, R_sep, K = gauss_product(Gaussian_1, Gaussian_2)
+    alpha, d_a, R_a, N_a = Gaussian_1.alpha, Gaussian_1.d, Gaussian_1.coords, Gaussian_1.Normalisation
+    beta, d_b, R_b, N_b = Gaussian_2.alpha, Gaussian_2.d, Gaussian_2.coords, Gaussian_2.Normalisation
+    N = N_a * N_b * d_a * d_b
+    return N*(np.pi/p)**1.5*K
 
 #wrirte all teh values out for each integral into a file

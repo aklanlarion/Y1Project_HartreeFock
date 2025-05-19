@@ -19,7 +19,7 @@ class contracted_gaussians():
         self.Normalisation = (2*alpha/np.pi)**0.75
 
 atomic_coordinates = [np.array([0,0,0])]
-atomic_masses = [1]
+atomic_masses = [2]
 assert len(atomic_coordinates) == len(atomic_masses)
 
 He_cg1a = contracted_gaussians(0.6362421394E+01, 0.1543289673E+00, atomic_coordinates[0])
@@ -30,8 +30,8 @@ Hes = [He_cg1a, He_cg1b, He_cg1c]
 Slater_bases = [Hes] 
 nbasis = len(Slater_bases)
 
-def H_core(Slater_bases): #Kinetic and Nuclear-Electron Potential
-    H_core = np.zeros([nbasis, nbasis])
+def T(Slater_bases): #Kinetic Energy matrix
+    T = np.zeros([nbasis, nbasis])
     for i in range(nbasis):
         for j in range(nbasis):
             n_contracted_i = len(Slater_bases[i])
@@ -39,8 +39,30 @@ def H_core(Slater_bases): #Kinetic and Nuclear-Electron Potential
 
             for k in range(n_contracted_i):
                 for l in range(n_contracted_j):
-                    H_core[i,j] += int.one_electron_kinetic(Slater_bases[i][k], Slater_bases[j][l]) + int.one_electron_potential(Slater_bases[i][k], Slater_bases[j][l])
+                    T[i, j] += int.one_electron_kinetic(Slater_bases[i][k], Slater_bases[j][l])
+    return T
 
+def V_ne(Slater_bases, atomic_coordinates, atomic_masses):
+    V = np.zeros([nbasis, nbasis])
+    natoms = len(atomic_masses)
+    for i in range(nbasis):
+        for j in range(nbasis):
+            n_contracted_i = len(Slater_bases[i])
+            n_contracted_j = len(Slater_bases[j])
+
+            for k in range(n_contracted_i):
+                for l in range(n_contracted_j):
+                    for m in range(natoms):
+                        V += int.one_electron_potential(Slater_bases[i][k], Slater_bases[j][l], atomic_coordinates[m], atomic_masses[m])
+    return V
+
+V = V_ne(Slater_bases, atomic_coordinates, atomic_masses)
+print(V)
+
+def H_core(Slater_bases): #Kinetic and Nuclear-Electron Potential
+    T = T(Slater_bases)
+    V = V_ne(Slater_bases, atomic_coordinates, atomic_masses)
+    H_core = T + V
     return H_core
 
 #H_core = H_core(Slater_bases)
