@@ -11,26 +11,7 @@ from scipy import linalg
 #import the integrals
 import intergrals as int
 
-class contracted_gaussians():
-    def __init__(self, alpha, d, coords): #have not yet added angular momenta terms, will have to do for p orbitals etc
-        self.alpha = alpha 
-        self.d = d #contraction coefficient
-        self.coords = coords
-        self.Normalisation = (2*alpha/np.pi)**0.75
-
-atomic_coordinates = [np.array([0,0,0])] #Add the coordinates of each atom, using known bond lengths
-atomic_masses = [2] #Add the masses of each atom, making sure they're in the same order as above
-assert len(atomic_coordinates) == len(atomic_masses)
-
-He_cg1a = contracted_gaussians(0.6362421394E+01, 0.1543289673E+00, atomic_coordinates[0])
-He_cg1b = contracted_gaussians(0.1158922999E+01, 0.5353281423E+00, atomic_coordinates[0])
-He_cg1c = contracted_gaussians(0.3136497915E+00, 0.4446345422E+00, atomic_coordinates[0])
-
-Hes = [He_cg1a, He_cg1b, He_cg1c]
-Slater_bases = [Hes] 
-nbasis = len(Slater_bases)
-
-def T(Slater_bases): #Kinetic Energy matrix
+def Kinetic(Slater_bases, nbasis): #Kinetic Energy matrix
     T = np.zeros([nbasis, nbasis])
     for i in range(nbasis):
         for j in range(nbasis):
@@ -42,7 +23,7 @@ def T(Slater_bases): #Kinetic Energy matrix
                     T[i, j] += int.one_electron_kinetic(Slater_bases[i][k], Slater_bases[j][l])
     return T
 
-def V_ne(Slater_bases, atomic_coordinates, atomic_masses):
+def Nuclear_electron(Slater_bases, atomic_coordinates, atomic_masses, nbasis):
     V = np.zeros([nbasis, nbasis])
     natoms = len(atomic_masses)
     for i in range(nbasis):
@@ -59,20 +40,17 @@ def V_ne(Slater_bases, atomic_coordinates, atomic_masses):
 #V = V_ne(Slater_bases, atomic_coordinates, atomic_masses)
 #print(V)
 
-def H_core(Slater_bases, atomic_coordinates, atomic_masses):
+def H_core(Slater_bases, atomic_coordinates, atomic_masses, nbasis):
     '''
     Kinetic, nuclear-nuclear, and nuclear-electron repulsion
     '''
-    Kinetic = T(Slater_bases)
-    V_nucec = V_ne(Slater_bases, atomic_coordinates, atomic_masses) 
+    T = Kinetic(Slater_bases, nbasis)
+    V_nucec = Nuclear_electron(Slater_bases, atomic_coordinates, atomic_masses, nbasis) 
     V_nn = int.nuclear_repulsion(atomic_masses, atomic_coordinates)
-    H_core = Kinetic + V_nucec + V_nn
+    H_core = T + V_nucec + V_nn
     return H_core
 
-H_core = H_core(Slater_bases, atomic_coordinates, atomic_masses)
-#print(H_core)
-
-def Overlap_matrix(Slater_bases):
+def Overlap_matrix(Slater_bases, nbasis):
     S = np.zeros([nbasis, nbasis])
     for i in range(nbasis):
         for j in range(nbasis):
@@ -90,7 +68,7 @@ def Overlap_matrix(Slater_bases):
 def Transformation_matrix():
     return
 
-def V_ee(Slater_bases):
+def V_ee(Slater_bases, nbasis):
     V_elecelec = np.zeros([nbasis, nbasis, nbasis, nbasis])
     for i in range(nbasis):
         for j in range(nbasis):
@@ -111,7 +89,7 @@ def V_ee(Slater_bases):
 #V_elecelec = V_ee(Slater_bases)
 #print(V_elecelec)
 
-def G_matrix(density_matrix, V_ee):
+def G_matrix(density_matrix, V_ee, nbasis):
     G = np.zeros([nbasis, nbasis])
     for i in range(nbasis):
         for j in range(nbasis):
@@ -122,14 +100,18 @@ def G_matrix(density_matrix, V_ee):
                     G[i, j] += density_matrix[k, l] * (J - 0.5*K)
     return G
 
-def Fock_matrx(H_core, G_matrix):
-    return H_core + G_matrix
-
 def Roothaan():
     return
 
 def coeff_matrix():
     return
 
-def Density_matrix():
-    return
+def density_matrix(Basis_coefficients, nbasis, nelectrons):
+    P = np.zeros([nbasis, nbasis])
+    half = nelectrons // 2
+    for i in range(nbasis):
+        for j in range(nbasis):
+            for k in range(half):
+                P[i, k] += 2*Basis_coefficients[i][k]*Basis_coefficients[j][k]
+                #Assume that C is real and hence Cdagger = C
+    return P 
