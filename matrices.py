@@ -28,7 +28,7 @@ He_cg1b = contracted_gaussians(0.1158922999E+01, 0.5353281423E+00, atomic_coordi
 He_cg1c = contracted_gaussians(0.3136497915E+00, 0.4446345422E+00, atomic_coordinates[0])
 
 Hes = [He_cg1a, He_cg1b, He_cg1c]
-Slater_bases = [Hes]
+Slater_bases = [Hes] 
 nbasis = len(Slater_bases)
 
 def H_core(Slater_bases): #Kinetic and Nuclear-Electron Potential
