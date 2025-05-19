@@ -12,8 +12,8 @@ from scipy import linalg
 
 def gauss_product(Gaussian_1, Gaussian_2):
     # Most of the integrals involve taking the product between two Gaussians.
-    alpha, R_a = Gaussian_1
-    beta, R_b = Gaussian_2
+    alpha, d, R_a, Normalisation = Gaussian_1
+    beta, d, R_b, Normalisation = Gaussian_2
     p = alpha + beta
     R_p = (alpha * R_a + beta * R_b) / p
     R_sep = np.linalg.norm(R_a - R_b)**2
