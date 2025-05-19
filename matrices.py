@@ -10,7 +10,6 @@ from scipy import linalg
 
 #import the integrals
 import intergrals as int
-import algorithm as alg
 
 class contracted_gaussians():
     def __init__(self, alpha, d, coords): #have not yet added angular momenta terms, will have to do for p orbitals etc
@@ -43,6 +42,8 @@ def H_core(Slater_bases): #Kinetic and Nuclear-Electron Potential
                     H_core[i,j] += int.one_electron_kinetic(Slater_bases[i][k], Slater_bases[j][l]) + int.one_electron_potential(Slater_bases[i][k], Slater_bases[j][l])
 
     return H_core
+
+H_core = H_core(Slater_bases)
 
 def Overlap_matrix():
     return

@@ -14,8 +14,8 @@ def gauss_product(Gaussian_1, Gaussian_2):
     # Most of the integrals involve taking the product between two Gaussians.
     # Two unnormalised gaussians g(r-R_a) and g(r-R_b) combine to give Kg(r-R_p)
     # Where K, the proportionality constant, is defined as below. See pp410 Modern Quantum Chemistry
-    alpha, d_a, R_a, N_a = Gaussian_1
-    beta, d_b, R_b, N_b = Gaussian_2
+    alpha, d_a, R_a, N_a = Gaussian_1.alpha, Gaussian_1.d, Gaussian_1.coords, Gaussian_1.Normalisation
+    beta, d_b, R_b, N_b = Gaussian_2.alpha, Gaussian_2.d, Gaussian_2.coords, Gaussian_2.Normalisation
     p = alpha + beta
     R_p = (alpha * R_a + beta * R_b) / p
     R_sep = np.linalg.norm(R_a - R_b)**2
