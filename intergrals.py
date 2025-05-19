@@ -20,7 +20,7 @@ def gauss_product(Gaussian_1, Gaussian_2):
     K = np.exp( -alpha*beta/p * R_sep)
     return p, R_p, R_sep, K
 
-def one_electron_kinetic(r,s):
+def one_electron_kinetic(r, s):
     '''
     This function calculates the one-electron integral for the kinetic energy of the electron (-1/2*laplace) and returns its value.
     Inputs: r,s - indeces of the basis functions being integrated.
