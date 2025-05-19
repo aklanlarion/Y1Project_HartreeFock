@@ -1,6 +1,8 @@
 '''
 This file containts the code for running the SCF algorithm. The inputs are given matrices & 
-functions performing the operations, and its output is a .cube file. 
+functions performing the operations, and its output is a .cube file.
+The self-consistent field cycle, definition of the bases, and the idea for the iteration are derived from 
+https://github.com/nickelandcopper/HartreeFockPythonProgram/blob/main/Hartree_Fock_Program.ipynb
 '''
 
 #importing necessary packages

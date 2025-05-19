@@ -1,6 +1,7 @@
 '''
 This file containts the matrix operations used in during the Hartree-Fock method. Its inputs are the two- and one-electron integrals, 
 and outputs functions containing the matrix operations.
+References: 
 '''
 
 #necessary libraries
@@ -99,12 +100,6 @@ def G_matrix(density_matrix, V_ee, nbasis):
                     K = V_ee[i, l, k, j]
                     G[i, j] += density_matrix[k, l] * (J - 0.5*K)
     return G
-
-def Roothaan():
-    return
-
-def coeff_matrix():
-    return
 
 def density_matrix(Basis_coefficients, nbasis, nelectrons):
     P = np.zeros([nbasis, nbasis])
