@@ -9,6 +9,8 @@ https://github.com/nickelandcopper/HartreeFockPythonProgram/blob/main/Hartree_Fo
 import numpy as np
 from scipy import linalg
 import matrices as mat
+import intergrals as int
+import matplotlib.pyplot as plt
 
 #---Define the molecule and basis functions---
 class contracted_gaussians():
@@ -31,6 +33,20 @@ Slater_bases = [Hes]
 nelectrons = 2 # Number of electrons in the system
 nbasis = len(Slater_bases) #Number of basis sets
 #------
+
+def charge_density(points, density_matrix, Slater_bases):
+    dens = 0
+    for i in range(nbasis):
+        for j in range(nbasis):
+            n_contracted_i = len(Slater_bases[i])
+            n_contracted_j = len(Slater_bases[j])
+
+            for k in range(n_contracted_i):
+                for l in range(n_contracted_j):
+                    p, R_p, R_sep, K, N = int.gauss_product(Slater_bases[i][k], Slater_bases[j][l])
+                    r2 = np.sum((points - R_p)**2, axis=1)
+                    dens += density_matrix[i][j] * N * K * np.exp(-p*r2)
+    return dens
 
 def E_0(H, P, F):
     E = 0
@@ -73,3 +89,9 @@ S_inverse_sqrt = linalg.sqrtm(linalg.inv(S))
 Density_matrix, Fock_matrix = SCF_cycle(H, V, S_inverse_sqrt)
 Electronic_energy = E_0(H, Density_matrix, Fock_matrix)
 print(Electronic_energy)
+
+#---Graph charge density----
+xval = np.arange(0, 5, 0.01)
+points = np.array([[i, 0.0, 0.0] for i in xval])
+plt.plot(xval, charge_density(points, Density_matrix, Slater_bases))
+plt.show()
