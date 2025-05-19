@@ -33,7 +33,7 @@ def one_electron_kinetic(Gaussian_1, Gaussian_2):
     N = N_a * N_b * d_a * d_b
     coeff1 = alpha * beta / p
     coeff2 = 3 - 2*alpha*beta/p * R_sep
-    coeff3 = (np.pi/p)**3/2
+    coeff3 = (np.pi/p)**1.5
     return N*coeff1*coeff2*coeff3*K
 
 def one_electron_potential(Gaussian_1, Gaussian_2):

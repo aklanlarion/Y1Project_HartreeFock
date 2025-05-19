@@ -44,6 +44,7 @@ def H_core(Slater_bases): #Kinetic and Nuclear-Electron Potential
     return H_core
 
 H_core = H_core(Slater_bases)
+print(H_core)
 
 def Overlap_matrix():
     return
