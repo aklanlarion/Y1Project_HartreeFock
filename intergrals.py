@@ -27,8 +27,8 @@ def one_electron_kinetic(Gaussian_1, Gaussian_2):
     This function calculates the one-electron integral for the kinetic energy of the electron (-1/2*laplace) and returns its value.
     Inputs: r,s - indeces of the basis functions being integrated.
     '''
-    alpha, d_a, R_a, N_a = Gaussian_1
-    beta, d_b, R_b, N_b = Gaussian_2
+    alpha, d_a, R_a, N_a = Gaussian_1.alpha, Gaussian_1.d, Gaussian_1.coords, Gaussian_1.Normalisation
+    beta, d_b, R_b, N_b = Gaussian_2.alpha, Gaussian_2.d, Gaussian_2.coords, Gaussian_2.Normalisation
     p, R_p, R_sep, K = gauss_product(Gaussian_1, Gaussian_2)
     N = N_a * N_b * d_a * d_b
     coeff1 = alpha * beta / p
