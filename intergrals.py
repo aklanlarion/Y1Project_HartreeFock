@@ -54,12 +54,18 @@ def one_electron_potential(Gaussian_1, Gaussian_2, R_c, Z):
     Term2 = boys(boys_input)
     return N*Term1*K*Term2
 
-def two_electron(r,s,t,u):
+def two_electron(Gaussian_1, Gaussian_2, Gaussian_3, Gaussian_4):
     '''
     Calculates the two-electron integral and returns its value (psi psi 1/r psi psi)
-    input: r,s,t,u - indeces of the four basis funcs your integrating over
     '''
-    return
+    p, R_p, R_ab, K_ab, N_ab = gauss_product(Gaussian_1, Gaussian_2)
+    q, R_q, R_cd, K_cd, N_cd = gauss_product(Gaussian_3, Gaussian_4)
+    Term1 = 2*np.pi**2.5 / (p * q * np.sqrt(p+q))
+    Term2 = K_ab*K_cd
+    boys_input = p*q / (p+q) * np.linalg.norm(R_p-R_q)**2
+    Term3 = boys(boys_input)
+    N = N_ab*N_cd
+    return N * Term1 * Term2 * Term3
 
 def overlap(Gaussian_1,Gaussian_2):
     '''
