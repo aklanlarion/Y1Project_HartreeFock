@@ -73,9 +73,6 @@ def overlap(Gaussian_1,Gaussian_2):
     input: m, n - indeces of functions
     '''
     p, R_p, R_sep, K, N = gauss_product(Gaussian_1, Gaussian_2)
-    alpha, d_a, R_a, N_a = Gaussian_1.alpha, Gaussian_1.d, Gaussian_1.coords, Gaussian_1.Normalisation
-    beta, d_b, R_b, N_b = Gaussian_2.alpha, Gaussian_2.d, Gaussian_2.coords, Gaussian_2.Normalisation
-    N = N_a * N_b * d_a * d_b
     return N*(np.pi/p)**1.5*K
 
 def nuclear_repulsion(atomic_masses, atomic_coordinates):
@@ -85,7 +82,7 @@ def nuclear_repulsion(atomic_masses, atomic_coordinates):
         return 0
     else:
         for i in range(natoms):
-            for j in range(i, natoms):
+            for j in range(i+1, natoms):
                 Rij = np.linalg.norm(atomic_coordinates[i] - atomic_coordinates[j])
                 E_nn += atomic_masses[i]*atomic_masses[j]/Rij
         return E_nn

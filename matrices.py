@@ -47,8 +47,7 @@ def H_core(Slater_bases, atomic_coordinates, atomic_masses, nbasis):
     '''
     T = Kinetic(Slater_bases, nbasis)
     V_nucec = Nuclear_electron(Slater_bases, atomic_coordinates, atomic_masses, nbasis) 
-    V_nn = int.nuclear_repulsion(atomic_masses, atomic_coordinates)
-    H_core = T + V_nucec + V_nn
+    H_core = T + V_nucec
     return H_core
 
 def Overlap_matrix(Slater_bases, nbasis):
