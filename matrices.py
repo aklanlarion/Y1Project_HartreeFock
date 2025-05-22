@@ -10,7 +10,7 @@ import numpy as np
 from scipy import linalg
 
 #import the integrals
-import intergrals as int
+import intergrals as integrals
 
 def Kinetic(Slater_bases, nbasis): #Kinetic Energy matrix
     T = np.zeros([nbasis, nbasis])
@@ -21,7 +21,7 @@ def Kinetic(Slater_bases, nbasis): #Kinetic Energy matrix
 
             for k in range(n_contracted_i):
                 for l in range(n_contracted_j):
-                    T[i, j] += int.one_electron_kinetic(Slater_bases[i][k], Slater_bases[j][l])
+                    T[i, j] += integrals.one_electron_kinetic(Slater_bases[i][k], Slater_bases[j][l])
     return T
 
 def Nuclear_electron(Slater_bases, atomic_coordinates, atomic_masses, nbasis):
@@ -35,7 +35,7 @@ def Nuclear_electron(Slater_bases, atomic_coordinates, atomic_masses, nbasis):
             for k in range(n_contracted_i):
                 for l in range(n_contracted_j):
                     for m in range(natoms):
-                        V += int.one_electron_potential(Slater_bases[i][k], Slater_bases[j][l], atomic_coordinates[m], atomic_masses[m])
+                        V[i, j] += integrals.one_electron_potential(Slater_bases[i][k], Slater_bases[j][l], atomic_coordinates[m], atomic_masses[m])
     return V
 
 #V = V_ne(Slater_bases, atomic_coordinates, atomic_masses)
@@ -59,7 +59,7 @@ def Overlap_matrix(Slater_bases, nbasis):
 
             for k in range(n_contracted_i):
                 for l in range(n_contracted_j):
-                    S[i, j] += int.overlap(Slater_bases[i][k], Slater_bases[j][l])
+                    S[i, j] += integrals.overlap(Slater_bases[i][k], Slater_bases[j][l])
     return S
 
 #S = Overlap_matrix(Slater_bases)
@@ -83,7 +83,7 @@ def V_ee(Slater_bases, nbasis):
                         for jj in range(n_contracted_j):
                             for kk in range(n_contracted_k):
                                 for ll in range(n_contracted_l):
-                                    V_elecelec[i, j, k, l] += int.two_electron(Slater_bases[i][ii], Slater_bases[j][jj], Slater_bases[k][kk], Slater_bases[l][ll])
+                                    V_elecelec[i, j, k, l] += integrals.two_electron(Slater_bases[i][ii], Slater_bases[j][jj], Slater_bases[k][kk], Slater_bases[l][ll])
     return V_elecelec
 
 #V_elecelec = V_ee(Slater_bases)
@@ -106,6 +106,6 @@ def density_matrix(Basis_coefficients, nbasis, nelectrons):
     for i in range(nbasis):
         for j in range(nbasis):
             for k in range(half):
-                P[i, k] += 2*Basis_coefficients[i][k]*Basis_coefficients[j][k]
+                P[i, j] += 2*Basis_coefficients[i][k]*Basis_coefficients[j][k]
                 #Assume that C is real and hence Cdagger = C
     return P 

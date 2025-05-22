@@ -18,7 +18,7 @@ def gauss_product(Gaussian_1, Gaussian_2):
     beta, d_b, R_b, N_b = Gaussian_2.alpha, Gaussian_2.d, Gaussian_2.coords, Gaussian_2.Normalisation
     p = alpha + beta
     R_p = (alpha * R_a + beta * R_b) / p
-    R_sep = np.linalg.norm(R_a - R_b)**2
+    R_sep = np.dot(R_a-R_b, R_a-R_b)
     K = np.exp( -alpha*beta/p * R_sep)
     N = N_a * N_b * d_a * d_b
     return p, R_p, R_sep, K, N
@@ -49,8 +49,8 @@ def one_electron_potential(Gaussian_1, Gaussian_2, R_c, Z):
     Inputs are the two contracted gaussians, and the atomic mass and coordinate it is currently being interacted with
     '''
     p, R_p, R_sep, K, N = gauss_product(Gaussian_1, Gaussian_2)
-    Term1 = -2*np.pi/p*Z
-    boys_input = p * np.linalg.norm(R_p - R_c)**2
+    Term1 = -2*np.pi*Z/p
+    boys_input = p * np.dot(R_p - R_c, R_p-R_c)
     Term2 = boys(boys_input)
     return N*Term1*K*Term2
 
