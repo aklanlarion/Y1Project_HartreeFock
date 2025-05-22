@@ -9,7 +9,7 @@ https://github.com/nickelandcopper/HartreeFockPythonProgram/blob/main/Hartree_Fo
 import numpy as np
 from scipy import linalg
 import matrices as mat
-import intergrals as int
+import intergrals as integrals
 import matplotlib.pyplot as plt
 
 #---Define the molecule and basis functions---
@@ -43,7 +43,7 @@ He_cg1b = contracted_gaussians(0.1158922999E+01, 0.5353281423E+00, atomic_coordi
 He_cg1c = contracted_gaussians(0.3136497915E+00, 0.4446345422E+00, atomic_coordinates[0])
 H_cg1a = contracted_gaussians(0.3425250914E+01, 0.1543289673E+00, atomic_coordinates[1])
 H_cg1b = contracted_gaussians(0.6239137298E+00, 0.5353281423E+00, atomic_coordinates[1])
-H_cg1c =contracted_gaussians(0.1688554040E+00, 0.4446345422E+00, atomic_coordinates[1])
+H_cg1c = contracted_gaussians(0.1688554040E+00, 0.4446345422E+00, atomic_coordinates[1])
 
 Hs = [H_cg1a, H_cg1b, H_cg1c]
 Hes = [He_cg1a, He_cg1b, He_cg1c]
@@ -66,7 +66,7 @@ def charge_density(points, density_matrix, Slater_bases):
 
             for k in range(n_contracted_i):
                 for l in range(n_contracted_j):
-                    p, R_p, R_sep, K, N = int.gauss_product(Slater_bases[i][k], Slater_bases[j][l])
+                    p, R_p, R_sep, K, N = integrals.gauss_product(Slater_bases[i][k], Slater_bases[j][l])
                     r2 = np.sum((points - R_p)**2, axis=1)
                     dens += density_matrix[i][j] * N * K * np.exp(-p*r2)
     return dens
@@ -76,7 +76,7 @@ def E_tot(H, P, F):
     Calculate the total energy of the system given the core hamiltonian, density matrix, and fock matrix
     Note that this is total and not electronic energy as H_core includes the nuclear-nuclear repulsion.
     '''
-    E = int.nuclear_repulsion(atomic_masses, atomic_coordinates) #Add nuclear-nuclear repulsion energy to E
+    E = integrals.nuclear_repulsion(atomic_masses, atomic_coordinates) #Add nuclear-nuclear repulsion energy to E
     for i in range(nbasis):
         for j in range(nbasis):
             E += P[j][i] * (H[i][j] + F[i][j]) / 2
@@ -111,11 +111,14 @@ H = mat.H_core(Slater_bases, atomic_coordinates, atomic_masses, nbasis) #Core ha
 V = mat.V_ee(Slater_bases, nbasis) #Electron-electron repulsion
 S = mat.Overlap_matrix(Slater_bases, nbasis) #Overlap matrix
 S_inverse_sqrt = linalg.sqrtm(linalg.inv(S))
+T = mat.Kinetic(Slater_bases, nbasis)
+Vne = mat.Nuclear_electron(Slater_bases, atomic_coordinates, atomic_masses, nbasis)
 
 print(H, 'Core hamiltonian \n')
 print(V, 'Two-electron terms \n')
 print(S, 'Overlap \n')
-
+print(T, 'Kinetic \n')
+print(Vne, 'Nuclear electron \n')
 #------
 
 #Call the SCF cycle, calculate electronic energy
@@ -123,6 +126,7 @@ Density_matrix, Fock_matrix = SCF_cycle(H, V, S_inverse_sqrt)
 print(Density_matrix)
 Energy = E_tot(H, Density_matrix, Fock_matrix)
 print(Energy)
+
 '''
 xval = np.arange(0, 3, 0.1)
 x3dval = np.array([[i, 0.0, 0.0] for i in xval])
@@ -143,11 +147,10 @@ plt.ylabel('Energy, Hartrees')
 plt.show()
 '''
 #---Graph charge density----
-'''
+
 xval = np.arange(-3, 3, 0.01)
 points = np.array([[i, 0.0, 0.0] for i in xval])
 plt.plot(xval, charge_density(points, Density_matrix, Slater_bases))
 plt.xlabel('Distance, Angstrom')
 plt.ylabel('Charge Density (e/Bohr^3)')
 plt.show()
-'''
