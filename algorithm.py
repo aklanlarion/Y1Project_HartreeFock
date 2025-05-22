@@ -34,6 +34,7 @@ Slater_bases = [Hes]
 nelectrons = 2 # Number of electrons in the system
 nbasis = len(Slater_bases) #Number of basis sets
 '''
+''' Helium Hydride
 atomic_coordinates = [np.array([0,0,0]), np.array([0.790*1.88973, 0, 0])]
 atomic_masses = [2, 1]
 assert len(atomic_coordinates) == len(atomic_masses)
@@ -51,10 +52,12 @@ Slater_bases = [Hes, Hs]
 nelectrons = 2
 nbasis = len(Slater_bases)
 
+print(integrals.one_electron_kinetic(Slater_bases[0][0], Slater_bases[1][0]))
 
+'''
 #------
 
-def charge_density(points, density_matrix, Slater_bases):
+def electron_density(points, density_matrix, Slater_bases):
     '''
     Calculate the charge density at an array of x values given a density matrix
     '''
@@ -88,7 +91,7 @@ def SCF_cycle(H, V, S_inverse_sqrt):
     Calculates a self-consistent set of coefficients
     '''
     P=np.zeros((nbasis,nbasis)) # initial guess for density matrix
-    max_cycles = 10 #Maximum cycles to prevent n infinite loop
+    max_cycles = 20 #Maximum cycles to prevent n infinite loop
     C_conv=10**(-6) #convergence criterion
     for i in range(max_cycles):
         Old_P = P 
@@ -103,36 +106,58 @@ def SCF_cycle(H, V, S_inverse_sqrt):
             return P, F
         else:
             i +=1
-    return P
+    return P, F
 
 #---Define the relevant matrices----
-
+'''
 H = mat.H_core(Slater_bases, atomic_coordinates, atomic_masses, nbasis) #Core hamiltonian
 V = mat.V_ee(Slater_bases, nbasis) #Electron-electron repulsion
 S = mat.Overlap_matrix(Slater_bases, nbasis) #Overlap matrix
 S_inverse_sqrt = linalg.sqrtm(linalg.inv(S))
 T = mat.Kinetic(Slater_bases, nbasis)
 Vne = mat.Nuclear_electron(Slater_bases, atomic_coordinates, atomic_masses, nbasis)
-
+'''
+'''
 print(H, 'Core hamiltonian \n')
 print(V, 'Two-electron terms \n')
 print(S, 'Overlap \n')
 print(T, 'Kinetic \n')
 print(Vne, 'Nuclear electron \n')
+'''
 #------
 
 #Call the SCF cycle, calculate electronic energy
+'''
 Density_matrix, Fock_matrix = SCF_cycle(H, V, S_inverse_sqrt)
 print(Density_matrix)
 Energy = E_tot(H, Density_matrix, Fock_matrix)
 print(Energy)
+'''
+# --- Graph total energy against bond length
 
 '''
-xval = np.arange(0, 3, 0.1)
+xval = np.arange(0.01, 3, 0.01)
 x3dval = np.array([[i, 0.0, 0.0] for i in xval])
 Energy = np.zeros([len(xval)])
 for i in range(len(xval)):
     points = x3dval[i]
+    atomic_coordinates = [np.array([0,0,0]), points]
+    atomic_masses = [2, 1]
+    assert len(atomic_coordinates) == len(atomic_masses)
+
+    He_cg1a = contracted_gaussians(0.6362421394E+01, 0.1543289673E+00, atomic_coordinates[0])
+    He_cg1b = contracted_gaussians(0.1158922999E+01, 0.5353281423E+00, atomic_coordinates[0])
+    He_cg1c = contracted_gaussians(0.3136497915E+00, 0.4446345422E+00, atomic_coordinates[0])
+    H_cg1a = contracted_gaussians(0.3425250914E+01, 0.1543289673E+00, atomic_coordinates[1])
+    H_cg1b = contracted_gaussians(0.6239137298E+00, 0.5353281423E+00, atomic_coordinates[1])
+    H_cg1c = contracted_gaussians(0.1688554040E+00, 0.4446345422E+00, atomic_coordinates[1])
+
+    Hs = [H_cg1a, H_cg1b, H_cg1c]
+    Hes = [He_cg1a, He_cg1b, He_cg1c]
+    Slater_bases = [Hes, Hs]
+    nelectrons = 2
+    nbasis = len(Slater_bases)
+
     H = mat.H_core(Slater_bases, atomic_coordinates, atomic_masses, nbasis) #Core hamiltonian
     V = mat.V_ee(Slater_bases, nbasis) #Electron-electron repulsion
     S = mat.Overlap_matrix(Slater_bases, nbasis) #Overlap matrix
@@ -146,11 +171,13 @@ plt.xlabel('Distance, Angstrom')
 plt.ylabel('Energy, Hartrees')
 plt.show()
 '''
+
 #---Graph charge density----
 
 xval = np.arange(-3, 3, 0.01)
 points = np.array([[i, 0.0, 0.0] for i in xval])
-plt.plot(xval, charge_density(points, Density_matrix, Slater_bases))
+plt.plot(xval, electron_density(points, Density_matrix, Slater_bases))
 plt.xlabel('Distance, Angstrom')
-plt.ylabel('Charge Density (e/Bohr^3)')
+plt.ylabel('Electron Density (e/Bohr^3)')
+plt.title('Electron Density')
 plt.show()
