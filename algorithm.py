@@ -14,11 +14,13 @@ import matplotlib.pyplot as plt
 
 #---Define the molecule and basis functions---
 class contracted_gaussians():
-    def __init__(self, alpha, d, coords): #have not yet added angular momenta terms, will have to do for p orbitals etc
+    def __init__(self, alpha, d, coords, L): # angular momentum L = [lx, ly, lz]
         self.alpha = alpha 
         self.d = d #contraction coefficient
         self.coords = coords
         self.Normalisation = (2*alpha/np.pi)**0.75
+        self.L = L
+        
 
 ''' Helium is defined below, remove quotation marks to use. 
 atomic_coordinates = [np.array([0,0,0])] #Add the coordinates of each atom, using known bond lengths
