@@ -21,7 +21,15 @@ def Kinetic(Slater_bases, nbasis): #Kinetic Energy matrix
 
             for k in range(n_contracted_i):
                 for l in range(n_contracted_j):
-                    T[i, j] += integrals.one_electron_kinetic(Slater_bases[i][k], Slater_bases[j][l])
+
+                    L1, L2 = Slater_bases[i][k].L, Slater_bases[j][l].L
+# if else statement to deterimine which function is used
+                    if L1 == [0, 0, 0] and L2 == [0, 0, 0]:
+                        T[i, j] += integrals.T_ss(Slater_bases[i][k], Slater_bases[j][l])
+                    elif 1 in L1 and 1 in L2:
+                        T[i, j] += integrals.T_pp(Slater_bases[i][k], Slater_bases[j][l])
+                    else:
+                        T[i, j] += integrals.T_sp(Slater_bases[i][k], Slater_bases[j][l])
     return T
 
 def Nuclear_electron(Slater_bases, atomic_coordinates, atomic_masses, nbasis):
@@ -35,7 +43,14 @@ def Nuclear_electron(Slater_bases, atomic_coordinates, atomic_masses, nbasis):
             for k in range(n_contracted_i):
                 for l in range(n_contracted_j):
                     for m in range(natoms):
-                        V[i, j] += integrals.one_electron_potential(Slater_bases[i][k], Slater_bases[j][l], atomic_coordinates[m], atomic_masses[m])
+                        L1, L2 = Slater_bases[i][k].L, Slater_bases[j][l].L
+# if else statement to deterimine which function is used
+                        if L1 == [0, 0, 0] and L2 == [0, 0, 0]:
+                            V[i, j] += V_ss(Slater_bases[i][k], Slater_bases[j][l], atomic_coordinates[m], atomic_masses[m])
+                        elif 1 in L1 and 1 in L2:
+                            T[i, j] += V_pp(Slater_bases[i][k], Slater_bases[j][l], atomic_coordinates[m], atomic_masses[m])
+                        else:
+                            V[i, j] += V_sp(Slater_bases[i][k], Slater_bases[j][l], atomic_coordinates[m], atomic_masses[m])
     return V
 
 #V = V_ne(Slater_bases, atomic_coordinates, atomic_masses)
