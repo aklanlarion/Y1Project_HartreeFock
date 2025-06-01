@@ -23,7 +23,7 @@ def gauss_product(Gaussian_1, Gaussian_2):
     N = N_a * N_b * d_a * d_b
     return p, R_p, R_sep, K, N
 
-def one_electron_kinetic(Gaussian_1, Gaussian_2):
+def T_ss(Gaussian_1, Gaussian_2):
     '''
     This function calculates the one-electron integral for the kinetic energy of the electron (-1/2*laplace) and returns its value.
     Inputs: r,s - indeces of the basis functions being integrated.
@@ -36,14 +36,78 @@ def one_electron_kinetic(Gaussian_1, Gaussian_2):
     Term3 = (np.pi/p)**1.5
     return N*Term1*Term2*Term3*K
 
-def boys(t):
+def T_sp(g1, g2):
+    L1, L2 = g1.L, g2.L
+    if L1 == [0, 0, 0]:
+        gs, gp = g1, g2
+    else:
+        gs, gp = g2, g1
+        
+    
+    alpha1, alpha2 = gs.alpha, gp.alpha
+    r1, r2 = np.array(gs.coords), np.array(gp.coords)   
+    N1, N2  = gs.d, gp.d  #contraction coeff
+    
+#define parameters
+    gamma = alpha1 + alpha2 #sum of exponents, same as p in other code
+    mu = alpha1*alpha2 / gamma   # mu factor
+    P = (alpha1*r1 + alpha2*r2) / gamma  #weighted coordinate (analogues to center of mass)
+    c1, c2 = ((2*alpha1)/np.pi) ** 0.75, 2**1.75 * alpha2**1.25 * np.pi**(-0.75)   #normalization factors
+    dstc_sqr = np.dot( r1-r2, r1-r2 ) # distance squared
+    S = (np.pi/gamma)**1.5 * np.exp(-mu * dstc_sqr) # s-s overlap, it's not two s functions but this term simplifies the expression
+    r1_d, r2_d = P - r1, P - r2
+
+    ort = int(np.where(np.array(gp.L) == 1)[0][0]) # orientation of p-orbital
+
+    return (N1*N2*c1*c2) * (2*alpha2/gamma) * r2_d[ort] * S
+
+def T_pp(g1, g2):
+    L1, L2 = np.array(g1.L), np.array(g2.L)
+    ort1, ort2 = int(np.where(L1 == 1)[0][0]) , int(np.where(L2 == 1)[0][0])
+
+    alpha1, alpha2 = g1.alpha, g2.alpha
+    r1, r2 = np.array(g1.coords), np.array(g2.coords)   
+    N1, N2  = g1.d, g2.d  #contraction coeff
+
+    gamma = alpha1 + alpha2 #sum of exponents, same as p in other code
+    mu = alpha1*alpha2 / gamma   # mu factor
+    P = (alpha1*r1 + alpha2*r2) / gamma  # center of product gaussian
+    c1, c2 = 2**1.75 * alpha1**1.25 * np.pi**(-0.75), 2**1.75 * alpha2**1.25 * np.pi**(-0.75)   #normalization factors
+    dstc_sqr = np.dot( r1-r2, r1-r2 ) # distance squared
+    S = (np.pi/gamma)**1.5 * np.exp(-mu * dstc_sqr) # s-s overlap, it's not two s functions but this term simplifies the expression
+    r1_d, r2_d = P - r1, P - r2  # distance vector to P
+
+    u = 2*alpha2/gamma
+    
+    if ort1 == ort2:
+        T_12 = (((u*r2_d[ort1])**2 - u) * r1_d[ort1]**2 + u) * S
+    else:
+        T_12 = u**2 * r1_d[ort1] * r1_d[ort2] * r2_d[ort1] * r2_d[ort2] * S
+
+    return T_12 * (N1*N2*c1*c2)
+
+
+def F0(t): #Boys function of order 0
     # This variant of the boys function is needed to evaluate nuclear-electron potential
     if t == 0:
         return 1
     else:
         return 0.5 * (np.pi/t)**0.5 * special.erf(t**0.5)
 
-def one_electron_potential(Gaussian_1, Gaussian_2, R_c, Z):
+def F1(t): #Boys function of order 1
+    if t == 0:
+        return 1/3
+
+    else:
+        return (F0(t) - np.exp(-t)) / (2*t)
+
+def F2(t):
+    if t == 0:
+        return 0.2
+    else:
+        return (F1(t) - np.exp(-t)/3) / (2*t)
+
+def V_ss(Gaussian_1, Gaussian_2, R_c, Z):
     '''
     This is function calculates the one-electron integral for the potential term (Z/r) and returns its numerical value.
     Inputs are the two contracted gaussians, and the atomic mass and coordinate it is currently being interacted with
@@ -51,8 +115,64 @@ def one_electron_potential(Gaussian_1, Gaussian_2, R_c, Z):
     p, R_p, R_sep, K, N = gauss_product(Gaussian_1, Gaussian_2)
     Term1 = -2*np.pi*Z/p
     boys_input = p * np.dot(R_p - R_c, R_p-R_c)
-    Term2 = boys(boys_input)
+    Term2 = F0(boys_input)
     return N*Term1*K*Term2
+
+def V_sp(g1, g2, r_n, Z):
+    L1, L2 = g1.L, g2.L
+    if L1 == [0, 0, 0]:
+        gs, gp = g1, g2
+    else:
+        gs, gp = g2, g1
+
+    alpha1, alpha2 = gs.alpha, gp.alpha
+    r1, r2 = np.array(gs.coords), np.array(gp.coords)   
+    N1, N2  = gs.d, gp.d  #contraction coeff
+    
+#define parameters
+    gamma = alpha1 + alpha2 #sum of exponents, same as p in other code
+    mu = alpha1*alpha2 / gamma   # mu factor
+    P = (alpha1*r1 + alpha2*r2) / gamma  # center of product gaussian
+    c1, c2 = ((2*alpha1)/np.pi) ** 0.75, 2**1.75 * alpha2**1.25 * np.pi**(-0.75)   #normalization factors
+    dstc_sqr = np.dot( r1-r2, r1-r2 ) # distance squared
+    K = np.exp(-mu * dstc_sqr) # s-s overlap, it's not two s functions but this term simplifies the expression
+    r_n = np.array(r_n)
+    r1_d, r2_d, rn_d = P - r1, P - r2, P - r_n   # distace vectors from the center of product gaussian
+
+
+    T = gamma * np.dot(rn_d, rn_d) #boys input
+    ort = int(np.where(np.array(gp.L) == 1)[0][0]) # orientation of p-orbital
+    C = -Z*2*np.pi*K/gamma  #prefactor
+    V_12 = C * (r2_d[ort]*F0(T) + rn_d[ort]*F1(T)/gamma)
+
+    return (N1*N2*c1*c2) * V_12
+
+def V_pp(g1, g2, r_n, Z):
+    L1, L2 = np.array(g1.L), np.array(g2.L)
+    ort1, ort2 = int(np.where(L1 == 1)[0][0]) , int(np.where(L2 == 1)[0][0])
+
+    alpha1, alpha2 = g1.alpha, g2.alpha
+    r1, r2 = np.array(g1.coords), np.array(g2.coords)   
+    N1, N2  = g1.d, g2.d  #contraction coeff
+
+    gamma = alpha1 + alpha2 #sum of exponents, same as p in other code
+    mu = alpha1*alpha2 / gamma   # mu factor
+    P = (alpha1*r1 + alpha2*r2) / gamma  # center of product gaussian
+    c1, c2 = 2**1.75 * alpha1**1.25 * np.pi**(-0.75), 2**1.75 * alpha2**1.25 * np.pi**(-0.75)   #normalization factors
+    dstc_sqr = np.dot( r1-r2, r1-r2 ) # distance squared
+    K = np.exp(-mu * dstc_sqr) 
+    r1_d, r2_d, rn_d = P - r1, P - r2, P - r_n   # distace vectors from the center of product gaussian
+
+    T = gamma * np.dot(rn_d, rn_d) #boys input
+    C = -Z*2*np.pi*K/gamma  #prefactor
+    
+    if ort1 == ort2:
+        V_12 = (r1_d[ort1]*r2_d[ort1] + 1/(2*gamma))*F0(T) + (r1_d[ort1] + r2_d[ort1])*(F1(T)*rn_d[ort1]/gamma) + 0.5*((rn_d[ort1]/gamma)**2)*F2(T)
+    
+    else:
+        V_12 = r1_d[ort1]*r2_d[ort2]*F0(T) + r1_d[ort1]*rn_d[ort2]*F1(T)/gamma + r2_d[ort2]*rn_d[ort1]*F1(T)/gamma + rn_d[ort1]*rn_d[ort2]*F2(T)*(gamma**(-2))
+
+    return (C*N1*N2*c1*c2)*V_12
 
 def two_electron(Gaussian_1, Gaussian_2, Gaussian_3, Gaussian_4):
     '''
