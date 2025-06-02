@@ -4,18 +4,20 @@
 
 import numpy as np
 from scipy import linalg
+from scipy.special import factorial2
 
 class contracted_gaussians():
     def __init__(self, alpha, d, coords, L): # angular momentum L = [lx, ly, lz]
         self.alpha = alpha 
         self.d = d #contraction coefficient
         self.coords = coords
-        self.Normalisation = (2*alpha/np.pi)**0.75
         self.L = L
-        
-        
-        
-        
+        l, m, n = L
+        self.l = l
+        self.m = m
+        self.n = n
+        self.Normalisation = (2/np.pi)**0.75 * 2**(l+m+n)*alpha**((2*l + 2*m + 2*n + 3)/4) / np.sqrt(factorial2(2*l-1)*factorial2(2*m-1)*factorial2(2*n-1))
+
 
 def H(coordinates): #hydrogen atom
     H_cg1a = contracted_gaussians(0.3425250914E+01, 0.1543289673E+00, coordinates, [0, 0, 0])
