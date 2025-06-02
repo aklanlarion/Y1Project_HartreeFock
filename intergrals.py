@@ -23,6 +23,7 @@ def gauss_product(Gaussian_1, Gaussian_2):
     N = N_a * N_b * d_a * d_b
     return p, R_p, R_sep, K, N
 
+
 def T_ss(Gaussian_1, Gaussian_2):
     '''
     This function calculates the one-electron integral for the kinetic energy of the electron (-1/2*laplace) and returns its value.
