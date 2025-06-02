@@ -23,6 +23,21 @@ def gauss_product(Gaussian_1, Gaussian_2):
     N = N_a * N_b * d_a * d_b
     return p, R_p, R_sep, K, N
 
+def hermite_polynomial(alpha, beta, R_sep, i, j, t):
+    p = alpha + beta
+    q = alpha*beta / p
+    if (t<0 or t>(i+j)):
+        return 0
+    elif i == j == t == 0:
+        return np.exp(-q*R_sep)
+    elif j == 0:
+        return (1/2*p)*hermite_polynomial(alpha, beta, R_sep, i-1, j, t-1) - \
+            (q*R_sep/alpha)*hermite_polynomial(alpha, beta, R_sep, i-1, j, t) + \
+            (t+1) * hermite_polynomial(alpha, beta, R_sep, i-1, j, t+1)
+    else:
+        return (1/2*p)*hermite_polynomial(alpha, beta, R_sep, i, j-1, t-1) - \
+            (q*R_sep/beta)*hermite_polynomial(alpha, beta, R_sep, i, j-1, t) + \
+            (t+1) * hermite_polynomial(alpha, beta, R_sep, i, j-1, t+1)
 
 def T_ss(Gaussian_1, Gaussian_2):
     '''
