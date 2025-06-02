@@ -39,6 +39,33 @@ def hermite_polynomial(alpha, beta, R_sep, i, j, t):
             (q*R_sep/beta)*hermite_polynomial(alpha, beta, R_sep, i, j-1, t) + \
             (t+1) * hermite_polynomial(alpha, beta, R_sep, i, j-1, t+1)
 
+def boys(n, T):
+    return special.hyp1f1(n+0.5, n+1.5, -T)/(2*n+1)
+
+def hermite_integral(p, X_pc, Y_pc, Z_pc, R_cp, t, u, v, n):
+    #X, Y, Z, R are cartesian DISTANCES
+    R = 0
+    if t == u == v == 0: 
+        R += (-2*p)**n * boys(n, p*R_cp**2)
+    elif t==u==0:
+        if v>0:
+            R += (v-1)*hermite_integral(p, X_pc, Y_pc, Z_pc, t, u, v-2, n+1)
+        R += Z_pc*hermite_integral(p, X_pc, Y_pc, Z_pc, t, u, v-1, n+1)
+    elif t==0:
+        if u>0:
+            R+= (u-1)*hermite_integral(p, X_pc, Y_pc, Z_pc, t, u-2, v, n+1)
+        R += Y_pc*hermite_integral(p, X_pc, Y_pc, Z_pc, t, u-1, v, n+1)
+    else:
+        if t>0:
+            R += (t-1)*hermite_integral(p, X_pc, Y_pc, Z_pc, t-2, u, v, n+1)
+        R += X_pc*hermite_integral(p, X_pc, Y_pc, Z_pc, t-1, u, v, n+1)
+    return R
+
+    return R 
+
+
+
+
 def T_ss(Gaussian_1, Gaussian_2):
     '''
     This function calculates the one-electron integral for the kinetic energy of the electron (-1/2*laplace) and returns its value.
@@ -199,7 +226,7 @@ def two_electron(Gaussian_1, Gaussian_2, Gaussian_3, Gaussian_4):
     Term1 = 2*np.pi**2.5 / (p * q * np.sqrt(p+q))
     Term2 = K_ab*K_cd
     boys_input = p*q / (p+q) * np.linalg.norm(R_p-R_q)**2
-    Term3 = boys(boys_input)
+    Term3 = boys(1, boys_input)
     N = N_ab*N_cd
     return N * Term1 * Term2 * Term3
 
