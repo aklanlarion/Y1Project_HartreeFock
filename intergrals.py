@@ -23,19 +23,20 @@ def gauss_product(Gaussian_1, Gaussian_2):
     N = N_a * N_b * d_a * d_b
     return p, R_p, R_sep, K, N
 
-def hermite_polynomial(alpha, beta, R_sep, i, j, t):
+def hermite_polynomial(alpha, beta, dist, i, j, t):
     p = alpha + beta
     q = alpha*beta / p
+    R_sep = dist**2
     if (t<0 or t>(i+j)):
         return 0
     elif i == j == t == 0:
         return np.exp(-q*R_sep)
     elif j == 0:
-        return (1/2*p)*hermite_polynomial(alpha, beta, R_sep, i-1, j, t-1) - \
+        return (1/(2*p))*hermite_polynomial(alpha, beta, R_sep, i-1, j, t-1) - \
             (q*R_sep/alpha)*hermite_polynomial(alpha, beta, R_sep, i-1, j, t) + \
             (t+1) * hermite_polynomial(alpha, beta, R_sep, i-1, j, t+1)
     else:
-        return (1/2*p)*hermite_polynomial(alpha, beta, R_sep, i, j-1, t-1) - \
+        return (1/(2*p))*hermite_polynomial(alpha, beta, R_sep, i, j-1, t-1) - \
             (q*R_sep/beta)*hermite_polynomial(alpha, beta, R_sep, i, j-1, t) + \
             (t+1) * hermite_polynomial(alpha, beta, R_sep, i, j-1, t+1)
 
@@ -49,20 +50,17 @@ def hermite_integral(p, X_pc, Y_pc, Z_pc, R_cp, t, u, v, n):
         R += (-2*p)**n * boys(n, p*R_cp**2)
     elif t==u==0:
         if v>0:
-            R += (v-1)*hermite_integral(p, X_pc, Y_pc, Z_pc, t, u, v-2, n+1)
-        R += Z_pc*hermite_integral(p, X_pc, Y_pc, Z_pc, t, u, v-1, n+1)
+            R += (v-1)*hermite_integral(p, X_pc, Y_pc, Z_pc, R_cp, t, u, v-2, n+1)
+        R += Z_pc*hermite_integral(p, X_pc, Y_pc, Z_pc, R_cp, t, u, v-1, n+1)
     elif t==0:
         if u>0:
-            R+= (u-1)*hermite_integral(p, X_pc, Y_pc, Z_pc, t, u-2, v, n+1)
-        R += Y_pc*hermite_integral(p, X_pc, Y_pc, Z_pc, t, u-1, v, n+1)
+            R+= (u-1)*hermite_integral(p, X_pc, Y_pc, Z_pc, R_cp, t, u-2, v, n+1)
+        R += Y_pc*hermite_integral(p, X_pc, Y_pc, Z_pc, R_cp, t, u-1, v, n+1)
     else:
         if t>0:
-            R += (t-1)*hermite_integral(p, X_pc, Y_pc, Z_pc, t-2, u, v, n+1)
-        R += X_pc*hermite_integral(p, X_pc, Y_pc, Z_pc, t-1, u, v, n+1)
+            R += (t-1)*hermite_integral(p, X_pc, Y_pc, Z_pc, R_cp, t-2, u, v, n+1)
+        R += X_pc*hermite_integral(p, X_pc, Y_pc, Z_pc, R_cp, t-1, u, v, n+1)
     return R
-
-    return R 
-
 
 
 
@@ -221,14 +219,35 @@ def two_electron(Gaussian_1, Gaussian_2, Gaussian_3, Gaussian_4):
     '''
     Calculates the two-electron integral and returns its value (psi psi 1/r psi psi)
     '''
+    #Below, extract p, q, angular coefficients, and coordinates as needed for the calculation
     p, R_p, R_ab, K_ab, N_ab = gauss_product(Gaussian_1, Gaussian_2)
     q, R_q, R_cd, K_cd, N_cd = gauss_product(Gaussian_3, Gaussian_4)
-    Term1 = 2*np.pi**2.5 / (p * q * np.sqrt(p+q))
-    Term2 = K_ab*K_cd
-    boys_input = p*q / (p+q) * np.linalg.norm(R_p-R_q)**2
-    Term3 = boys(1, boys_input)
-    N = N_ab*N_cd
-    return N * Term1 * Term2 * Term3
+    R_cp = np.linalg.norm(R_p - R_q)
+    l1, m1, n1, A, alpha = Gaussian_1.l, Gaussian_1.m, Gaussian_1.n, Gaussian_1.coords, Gaussian_1.alpha
+    l2, m2, n2, B, beta = Gaussian_2.l, Gaussian_2.m, Gaussian_2.n, Gaussian_2.coords, Gaussian_2.alpha
+    l3, m3, n3, C, gamma = Gaussian_3.l, Gaussian_3.m, Gaussian_3.n, Gaussian_3.coords, Gaussian_3.alpha
+    l4, m4, n4, D, delta = Gaussian_4.l, Gaussian_4.m, Gaussian_4.n, Gaussian_4.coords, Gaussian_4.alpha
+    
+    g = 0
+    for t in range(l1+l2+1):
+        for u in range(m1+m2+1):
+            for v in range(n1+n2+1):
+                for tau in range(l3+l4+1):
+                    for nu in range(m3+m4+1):
+                        for phi in range(n3+n4+1):
+                            g += hermite_polynomial(alpha, beta, A[0]-B[0], l1, l2, t) * \
+                            hermite_polynomial(alpha, beta, A[1]-B[1], m1, m2, u) * \
+                            hermite_polynomial(alpha, beta, A[2] - B[2], n1, n2, v) * \
+                            (-1)**(tau+nu+phi) * \
+                            hermite_polynomial(gamma, delta, C[0]-D[0], l3, l4, tau) * \
+                            hermite_polynomial(gamma, delta, C[1]-D[1], m3, m4, nu) * \
+                            hermite_polynomial(gamma, delta, C[2] - D[2], n3, n4, phi) * \
+                            hermite_integral((p*q/(p+q)), R_p[0] - R_q[0], R_p[1] - R_q[1], \
+                                             R_p[2] - R_q[2], R_cp, t+tau, u+nu, v+phi, 0)
+
+    g *= 2*np.pi**2.5 / (p * q * np.sqrt(p+q))
+    g *= N_ab*N_cd
+    return g
 
 def overlap(Gaussian_1,Gaussian_2):
     '''
