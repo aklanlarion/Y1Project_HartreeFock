@@ -7,6 +7,11 @@ import sys
 import numpy as np
 from scipy import special
 from scipy import linalg
+from functools import lru_cache
+
+import sys
+sys.setrecursionlimit(1000000)  # default is around 1000
+
 
 #input files - basis, num of electrons, separation, etc
 
@@ -24,6 +29,9 @@ def gauss_product(Gaussian_1, Gaussian_2):
     return p, R_p, R_sep, K, N
 
 def hermite_polynomial(alpha, beta, dist, i, j, t):
+    if i<0 or j<0: 
+        print('Negative')
+        return 0
     p = alpha + beta
     q = alpha*beta / p
     R_sep = dist**2
@@ -32,36 +40,66 @@ def hermite_polynomial(alpha, beta, dist, i, j, t):
     elif i == j == t == 0:
         return np.exp(-q*R_sep)
     elif j == 0:
-        return (1/(2*p))*hermite_polynomial(alpha, beta, R_sep, i-1, j, t-1) - \
-            (q*R_sep/alpha)*hermite_polynomial(alpha, beta, R_sep, i-1, j, t) + \
-            (t+1) * hermite_polynomial(alpha, beta, R_sep, i-1, j, t+1)
+        return (1/(2*p))*hermite_polynomial(alpha, beta, dist, i-1, j, t-1) - \
+            (q*R_sep/alpha)*hermite_polynomial(alpha, beta, dist, i-1, j, t) + \
+            (t+1) * hermite_polynomial(alpha, beta, dist, i-1, j, t+1)
     else:
-        return (1/(2*p))*hermite_polynomial(alpha, beta, R_sep, i, j-1, t-1) - \
-            (q*R_sep/beta)*hermite_polynomial(alpha, beta, R_sep, i, j-1, t) + \
-            (t+1) * hermite_polynomial(alpha, beta, R_sep, i, j-1, t+1)
+        return (1/(2*p))*hermite_polynomial(alpha, beta, dist, i, j-1, t-1) - \
+            (q*R_sep/beta)*hermite_polynomial(alpha, beta, dist, i, j-1, t) + \
+            (t+1) * hermite_polynomial(alpha, beta, dist, i, j-1, t+1)
 
 def boys(n, T):
     return special.hyp1f1(n+0.5, n+1.5, -T)/(2*n+1)
 
-def hermite_integral(p, X_pc, Y_pc, Z_pc, R_cp, t, u, v, n):
-    #X, Y, Z, R are cartesian DISTANCES
-    R = 0
-    if t == u == v == 0: 
-        R += (-2*p)**n * boys(n, p*R_cp**2)
-    elif t==u==0:
-        if v>0:
-            R += (v-1)*hermite_integral(p, X_pc, Y_pc, Z_pc, R_cp, t, u, v-2, n+1)
-        R += Z_pc*hermite_integral(p, X_pc, Y_pc, Z_pc, R_cp, t, u, v-1, n+1)
-    elif t==0:
-        if u>0:
-            R+= (u-1)*hermite_integral(p, X_pc, Y_pc, Z_pc, R_cp, t, u-2, v, n+1)
-        R += Y_pc*hermite_integral(p, X_pc, Y_pc, Z_pc, R_cp, t, u-1, v, n+1)
-    else:
-        if t>0:
-            R += (t-1)*hermite_integral(p, X_pc, Y_pc, Z_pc, R_cp, t-2, u, v, n+1)
-        R += X_pc*hermite_integral(p, X_pc, Y_pc, Z_pc, R_cp, t-1, u, v, n+1)
-    return R
+import math
+from functools import lru_cache
 
+# Memoized Boys function (or replace with a fast approximation)
+@lru_cache(maxsize=None)
+
+def hermite_integral(p, X_pc, Y_pc, Z_pc, R_cp, t_max, u_max, v_max, n_max):
+    # Initialize DP table: dp[t][u][v][n]
+    dp = {}
+
+    # Precompute Boys function values for all needed n
+    boys_cache = {}
+    pR2 = p * R_cp**2
+    for n in range(n_max + t_max + u_max + v_max + 1):
+        boys_cache[n] = boys(n, pR2)
+
+    # Initialize base case (t=0, u=0, v=0) for all possible n
+    for n in range(n_max + t_max + u_max + v_max + 1):
+        dp[(0, 0, 0, n)] = (-2 * p)**n * boys_cache[n]
+
+    # Iterate over all possible t, u, v in increasing order
+    for t in range(t_max + 1):
+        for u in range(u_max + 1):
+            for v in range(v_max + 1):
+                for n in range(n_max + 1):
+                    if (t, u, v, n) in dp:
+                        continue  # Already computed
+
+                    # Apply recurrence relations
+                    res = 0.0
+                    if t == 0 and u == 0:
+                        if v > 0:
+                            if v >= 2:
+                                res += (v - 1) * dp.get((t, u, v - 2, n + 1), 0)
+                            res += Z_pc * dp.get((t, u, v - 1, n + 1), 0)
+                    elif t == 0:
+                        if u > 0:
+                            if u >= 2:
+                                res += (u - 1) * dp.get((t, u - 2, v, n + 1), 0)
+                            res += Y_pc * dp.get((t, u - 1, v, n + 1), 0)
+                    else:
+                        if t > 0:
+                            if t >= 2:
+                                res += (t - 1) * dp.get((t - 2, u, v, n + 1), 0)
+                            res += X_pc * dp.get((t - 1, u, v, n + 1), 0)
+
+                    dp[(t, u, v, n)] = res
+
+    return dp[(t_max, u_max, v_max, n_max)]
 
 
 def T_ss(Gaussian_1, Gaussian_2):

@@ -12,6 +12,9 @@ from scipy import linalg
 #import the integrals
 import intergrals as integrals
 
+import sys
+sys.setrecursionlimit(1000000)  # default is around 1000
+
 def Kinetic(Slater_bases, nbasis): #Kinetic Energy matrix
     T = np.zeros([nbasis, nbasis])
     for i in range(nbasis):
@@ -46,11 +49,11 @@ def Nuclear_electron(Slater_bases, atomic_coordinates, atomic_masses, nbasis):
                         L1, L2 = Slater_bases[i][k].L, Slater_bases[j][l].L
 # if else statement to deterimine which function is used
                         if L1 == [0, 0, 0] and L2 == [0, 0, 0]:
-                            V[i, j] += V_ss(Slater_bases[i][k], Slater_bases[j][l], atomic_coordinates[m], atomic_masses[m])
+                            V[i, j] += integrals.V_ss(Slater_bases[i][k], Slater_bases[j][l], atomic_coordinates[m], atomic_masses[m])
                         elif 1 in L1 and 1 in L2:
-                            T[i, j] += V_pp(Slater_bases[i][k], Slater_bases[j][l], atomic_coordinates[m], atomic_masses[m])
+                            V[i, j] += integrals.V_pp(Slater_bases[i][k], Slater_bases[j][l], atomic_coordinates[m], atomic_masses[m])
                         else:
-                            V[i, j] += V_sp(Slater_bases[i][k], Slater_bases[j][l], atomic_coordinates[m], atomic_masses[m])
+                            V[i, j] += integrals.V_sp(Slater_bases[i][k], Slater_bases[j][l], atomic_coordinates[m], atomic_masses[m])
     return V
 
 #V = V_ne(Slater_bases, atomic_coordinates, atomic_masses)
