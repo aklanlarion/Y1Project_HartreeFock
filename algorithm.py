@@ -74,31 +74,42 @@ def SCF_cycle(H, V, S_inverse_sqrt):
     return P, F
 
 
-atomic_masses = [2, 1]
+atomic_masses = [6]
 xval = np.arange(0.01, 3, 0.01)
 x3dval = np.array([[i, 0.0, 0.0] for i in xval]) #smart way to calculate at different seperations
 Energy = np.zeros([len(xval)])
-for i in range(len(xval)):
-    points = x3dval[i]
-    atomic_coordinates = [np.array([0,0,0]), points]
-    assert len(atomic_coordinates) == len(atomic_masses)
-    
-    Slater_bases = atoms.He(atomic_coordinates[0]) + atoms.H(atomic_coordinates[1])
-    nelectrons = 2
-    nbasis = len(Slater_bases)
 
-    H = mat.H_core(Slater_bases, atomic_coordinates, atomic_masses, nbasis) #Core hamiltonian
-    V = mat.V_ee(Slater_bases, nbasis) #Electron-electron repulsion
-    S = mat.Overlap_matrix(Slater_bases, nbasis) #Overlap matrix
-    S_inverse_sqrt = linalg.sqrtm(linalg.inv(S))
-    Density_matrix, Fock_matrix = SCF_cycle(H, V, S_inverse_sqrt)
-    print(Density_matrix)
-    Energy[i] = E_tot(H, Density_matrix, Fock_matrix)
+atomic_coordinates = [np.array([0,0,0])]
+assert len(atomic_coordinates) == len(atomic_masses)
+    
+Slater_bases = atoms.C(atomic_coordinates[0])
+nelectrons = 6
+nbasis = len(Slater_bases)
+
+S = mat.Overlap_matrix(Slater_bases, nbasis) #Overlap matrix
+print('S', S)
+T = mat.Kinetic(Slater_bases, nbasis)
+print('T', T)
+V_ne = mat.Nuclear_electron(Slater_bases, atomic_coordinates, atomic_masses, nbasis)
+print('V_ne', V_ne)
+H = mat.H_core(Slater_bases, atomic_coordinates, atomic_masses, nbasis) #Core hamiltonian
+print('H', H)
+V = mat.V_ee(Slater_bases, nbasis) #Electron-electron repulsion
+print('V', V)
+S_inverse_sqrt = linalg.sqrtm(linalg.inv(S))
+Density_matrix, Fock_matrix = SCF_cycle(H, V, S_inverse_sqrt)
+print('Density', Density_matrix)
+Energy = E_tot(H, Density_matrix, Fock_matrix)
+print('Energy', Energy)
+
+'''
+Energy[i] = E_tot(H, Density_matrix, Fock_matrix)
 
 plt.plot(xval, Energy)
 plt.xlabel('Distance, Angstrom')
 plt.ylabel('Energy, Hartrees')
 plt.show()
+'''
 
 
 #---Graph charge density----
@@ -110,4 +121,3 @@ plt.xlabel('Distance, Angstrom')
 plt.ylabel('Electron Density (e/Bohr^3)')
 plt.title('Electron Density')
 plt.show()
-
