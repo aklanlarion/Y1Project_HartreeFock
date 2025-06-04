@@ -12,6 +12,9 @@ import intergrals as integrals
 import atoms
 import matplotlib.pyplot as plt
 
+import sys
+sys.setrecursionlimit(1000000)  # default is around 1000
+
 #---Define the molecule and basis functions---
 class contracted_gaussians():
     def __init__(self, alpha, d, coords, L): # angular momentum L = [lx, ly, lz]
@@ -75,13 +78,20 @@ def SCF_cycle(H, V, S_inverse_sqrt):
 
 
 atomic_masses = [6]
+atomic_masses = [6]
 xval = np.arange(0.01, 3, 0.01)
 x3dval = np.array([[i, 0.0, 0.0] for i in xval]) #smart way to calculate at different seperations
 Energy = np.zeros([len(xval)])
 
 atomic_coordinates = [np.array([0,0,0])]
 assert len(atomic_coordinates) == len(atomic_masses)
+
+atomic_coordinates = [np.array([0,0,0])]
+assert len(atomic_coordinates) == len(atomic_masses)
     
+Slater_bases = atoms.C(atomic_coordinates[0])
+nelectrons = 6
+nbasis = len(Slater_bases)
 Slater_bases = atoms.C(atomic_coordinates[0])
 nelectrons = 6
 nbasis = len(Slater_bases)

@@ -12,6 +12,9 @@ from scipy import linalg
 #import the integrals
 import intergrals as integrals
 
+import sys
+sys.setrecursionlimit(1000000)  # default is around 1000
+
 def Kinetic(Slater_bases, nbasis): #Kinetic Energy matrix
     T = np.zeros([nbasis, nbasis])
     for i in range(nbasis):
