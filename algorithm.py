@@ -76,24 +76,19 @@ def SCF_cycle(H, V, S_inverse_sqrt):
             i +=1
     return P, F
 
+#This is where you change between different atoms.
+nelectrons = 11 # net number of electrons of the entire system
+atomic_masses = [11] # the atomic mass of each component
+atomic_coordinates = [np.array([0,0,0])] # define the separation between the atoms in the compound
 
-atomic_masses = [6]
-atomic_masses = [6]
+
 xval = np.arange(0.01, 3, 0.01)
-x3dval = np.array([[i, 0.0, 0.0] for i in xval]) #smart way to calculate at different seperations
+#x3dval = np.array([[i, 0.0, 0.0] for i in xval]) #smart way to calculate at different seperations
 Energy = np.zeros([len(xval)])
 
-atomic_coordinates = [np.array([0,0,0])]
-assert len(atomic_coordinates) == len(atomic_masses)
-
-atomic_coordinates = [np.array([0,0,0])]
 assert len(atomic_coordinates) == len(atomic_masses)
     
-Slater_bases = atoms.C(atomic_coordinates[0])
-nelectrons = 6
-nbasis = len(Slater_bases)
-Slater_bases = atoms.C(atomic_coordinates[0])
-nelectrons = 6
+Slater_bases = atoms.Na(atomic_coordinates[0]) # also edit this to change the type of atoms in the compound
 nbasis = len(Slater_bases)
 
 S = mat.Overlap_matrix(Slater_bases, nbasis) #Overlap matrix
@@ -129,14 +124,17 @@ fig, ax = plt.subplots()
 xval = np.arange(-3, 3, 0.01)
 points = np.array([[i, 0.0, 0.0] for i in xval])
 edensity=electron_density(points, Density_matrix, Slater_bases)
-ax.plot(xval, edensity)
+ax.plot(xval, edensity,label='Electron density')
+
 plt.xlabel(r'Distance [${\AA}$]')
 plt.ylabel(r'Electron Density [$e/Bohr^3$]')
-ax.set_title('Electron Density')
-ax.set_yticks(np.arange(0,max(edensity),20))
-ax.set_yticks(np.arange(0,max(edensity),2), minor=True)
+ax.set_title(r'Electron Density of $Na$')
+
+ax.set_yticks(np.arange(0,max(edensity)*1.01,round(max(edensity)*0.25,1)))
+ax.set_yticks(np.arange(0,max(edensity)*1.01,max(edensity)*0.025), minor=True)
 ax.set_xticks(np.arange(-3,3,1/10), minor=True)
 ax.grid(True,alpha=0.4)
-ax.set_ylim([-1,max(edensity)+1])
+ax.set_ylim([min(edensity)-max(edensity)*0.01,max(edensity)+max(edensity)*0.01])
 ax.set_xlim([-3,3])
+plt.savefig('Na',dpi=300)
 plt.show()
