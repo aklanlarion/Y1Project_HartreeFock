@@ -124,10 +124,19 @@ plt.show()
 
 #---Graph charge density----
 
+fig, ax = plt.subplots()
+
 xval = np.arange(-3, 3, 0.01)
 points = np.array([[i, 0.0, 0.0] for i in xval])
-plt.plot(xval, electron_density(points, Density_matrix, Slater_bases))
-plt.xlabel('Distance, Angstrom')
-plt.ylabel('Electron Density (e/Bohr^3)')
-plt.title('Electron Density')
+edensity=electron_density(points, Density_matrix, Slater_bases)
+ax.plot(xval, edensity)
+plt.xlabel(r'Distance [${\AA}$]')
+plt.ylabel(r'Electron Density [$e/Bohr^3$]')
+ax.set_title('Electron Density')
+ax.set_yticks(np.arange(0,max(edensity),20))
+ax.set_yticks(np.arange(0,max(edensity),2), minor=True)
+ax.set_xticks(np.arange(-3,3,1/10), minor=True)
+ax.grid(True,alpha=0.4)
+ax.set_ylim([-1,max(edensity)+1])
+ax.set_xlim([-3,3])
 plt.show()
