@@ -13,7 +13,6 @@ import atoms
 import matplotlib.pyplot as plt
 
 import sys
-sys.setrecursionlimit(1000000)  # default is around 1000
 
 #---Define the molecule and basis functions---
 class contracted_gaussians():
@@ -81,14 +80,19 @@ nelectrons = 2 # net number of electrons of the entire system
 atomic_masses = [1,2] # the atomic mass of each component
 atomic_coordinates = [np.array([0,0,0]),np.array([0.772,0,0])] # define the separation between the atoms in the compound
 
-
+atomic_masses = [11, 17]
+xval = np.arange(0.01, 3, 0.01)
+x3dval = np.array([[i, 0.0, 0.0] for i in xval]) #smart way to calculate at different seperations
 xval = np.arange(0.01, 3, 0.000001)
 #x3dval = np.array([[i, 0.0, 0.0] for i in xval]) #smart way to calculate at different seperations
 Energy = np.zeros([len(xval)])
 
+atomic_coordinates = [np.array([0,0,0]), np.array([3.03, 0, 0])]
 assert len(atomic_coordinates) == len(atomic_masses)
+
     
-Slater_bases = atoms.H(atomic_coordinates[0]) + atoms.He(atomic_coordinates[1]) # also edit this to change the type of atoms in the compound
+nelectrons = 28
+Slater_bases = atoms.Na(atomic_coordinates[0]) + atoms.Cl(atomic_coordinates[1])
 nbasis = len(Slater_bases)
 
 S = mat.Overlap_matrix(Slater_bases, nbasis) #Overlap matrix
