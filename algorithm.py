@@ -77,18 +77,18 @@ def SCF_cycle(H, V, S_inverse_sqrt):
     return P, F
 
 #This is where you change between different atoms.
-nelectrons = 11 # net number of electrons of the entire system
-atomic_masses = [11] # the atomic mass of each component
-atomic_coordinates = [np.array([0,0,0])] # define the separation between the atoms in the compound
+nelectrons = 2 # net number of electrons of the entire system
+atomic_masses = [1,2] # the atomic mass of each component
+atomic_coordinates = [np.array([0,0,0]),np.array([0.772,0,0])] # define the separation between the atoms in the compound
 
 
-xval = np.arange(0.01, 3, 0.01)
+xval = np.arange(0.01, 3, 0.000001)
 #x3dval = np.array([[i, 0.0, 0.0] for i in xval]) #smart way to calculate at different seperations
 Energy = np.zeros([len(xval)])
 
 assert len(atomic_coordinates) == len(atomic_masses)
     
-Slater_bases = atoms.Na(atomic_coordinates[0]) # also edit this to change the type of atoms in the compound
+Slater_bases = atoms.H(atomic_coordinates[0]) + atoms.He(atomic_coordinates[1]) # also edit this to change the type of atoms in the compound
 nbasis = len(Slater_bases)
 
 S = mat.Overlap_matrix(Slater_bases, nbasis) #Overlap matrix
@@ -105,7 +105,8 @@ S_inverse_sqrt = linalg.sqrtm(linalg.inv(S))
 Density_matrix, Fock_matrix = SCF_cycle(H, V, S_inverse_sqrt)
 print('Density', Density_matrix)
 Energy = E_tot(H, Density_matrix, Fock_matrix)
-print('Energy', Energy)
+print('Energy (Hartrees)', Energy, '\n')
+print('Energy (eV)', Energy*27.2114)
 
 '''
 Energy[i] = E_tot(H, Density_matrix, Fock_matrix)
@@ -116,25 +117,26 @@ plt.ylabel('Energy, Hartrees')
 plt.show()
 '''
 
-
-#---Graph charge density----
-
-fig, ax = plt.subplots()
-
 xval = np.arange(-3, 3, 0.01)
 points = np.array([[i, 0.0, 0.0] for i in xval])
 edensity=electron_density(points, Density_matrix, Slater_bases)
-ax.plot(xval, edensity,label='Electron density')
 
-plt.xlabel(r'Distance [${\AA}$]')
-plt.ylabel(r'Electron Density [$e/Bohr^3$]')
-ax.set_title(r'Electron Density of $Na$')
+#---Graph charge density----
+if __name__=='__main__':
+    fig, ax = plt.subplots()
 
-ax.set_yticks(np.arange(0,max(edensity)*1.01,round(max(edensity)*0.25,1)))
-ax.set_yticks(np.arange(0,max(edensity)*1.01,max(edensity)*0.025), minor=True)
-ax.set_xticks(np.arange(-3,3,1/10), minor=True)
-ax.grid(True,alpha=0.4)
-ax.set_ylim([min(edensity)-max(edensity)*0.01,max(edensity)+max(edensity)*0.01])
-ax.set_xlim([-3,3])
-plt.savefig('Na',dpi=300)
-plt.show()
+    
+    ax.plot(xval, edensity,label='Electron density')
+
+    plt.xlabel(r'Distance [${\AA}$]')
+    plt.ylabel(r'Electron Density [$e/Bohr^3$]')
+    ax.set_title(r'Electron Density of $HeH+$')
+
+    ax.set_yticks(np.arange(0,max(edensity)*1.01,round(max(edensity)*0.25,1)))
+    ax.set_yticks(np.arange(0,max(edensity)*1.01,max(edensity)*0.025), minor=True)
+    ax.set_xticks(np.arange(-3,3,1/10), minor=True)
+    ax.grid(True,alpha=0.4)
+    ax.set_ylim([min(edensity)-max(edensity)*0.01,max(edensity)+max(edensity)*0.01])
+    ax.set_xlim([-3,3])
+    #plt.savefig('Na',dpi=300)
+    plt.show()
