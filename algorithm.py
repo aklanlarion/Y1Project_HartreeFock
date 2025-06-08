@@ -14,21 +14,18 @@ import matplotlib.pyplot as plt
 
 import sys
 
-#---Define the molecule and basis functions---
-class contracted_gaussians():
-    def __init__(self, alpha, d, coords, L): # angular momentum L = [lx, ly, lz]
-        self.alpha = alpha 
-        self.d = d #contraction coefficient
-        self.coords = coords
-        self.Normalisation = (2*alpha/np.pi)**0.75
-        self.L = L
-        
 
 def electron_density(points, density_matrix, Slater_bases):
     '''
     Calculate the charge density at an array of x values given a density matrix
     '''
-    dens = 0
+    original_shape = points.shape[1:]
+    npoints = np.prod(original_shape)
+    points_flat = points.reshape(3, -1).T  # Shape (npoints, 3)
+    
+    dens_flat = np.zeros(npoints)
+    nbasis = len(Slater_bases)
+    
     for i in range(nbasis):
         for j in range(nbasis):
             n_contracted_i = len(Slater_bases[i])
@@ -36,10 +33,23 @@ def electron_density(points, density_matrix, Slater_bases):
 
             for k in range(n_contracted_i):
                 for l in range(n_contracted_j):
-                    p, R_p, R_sep, K, N = integrals.gauss_product(Slater_bases[i][k], Slater_bases[j][l])
-                    r2 = np.sum((points - R_p)**2, axis=1)
-                    dens += density_matrix[i][j] * N * K * np.exp(-p*r2)
-    return dens
+                    g1 = Slater_bases[i][k]
+                    g2 = Slater_bases[j][l]
+                    l1, m1, n1, A, d1, N1, alpha1 = g1.l, g1.m, g1.n, g1.coords, g1.d, g1.Normalisation, g1.alpha
+                    l2, m2, n2, B, d2, N2, alpha2 = g2.l, g2.m, g2.n, g2.coords, g2.d, g2.Normalisation, g2.alpha
+                    rA_sep = points_flat - A
+                    rB_sep = points_flat - B
+                    rA_sep2 = np.sum(rA_sep**2, axis=1)
+                    rB_sep2 = np.sum(rB_sep**2, axis=1)
+                    xA, yA, zA = rA_sep[:, 0], rA_sep[:, 1], rA_sep[:, 2]
+                    xB, yB, zB = rB_sep[:, 0], rB_sep[:, 1], rB_sep[:, 2]
+
+                    phi1 = xA**l1 * yA**m1 * zA**n1 * np.exp(-alpha1*rA_sep2)
+                    phi2 = xB**l2 * yB**m2 * zB**n2 * np.exp(-alpha2*rB_sep2)
+                    N = N1*N2*d1*d2
+
+                    dens_flat += density_matrix[i][j] * N * phi1 * phi2
+    return dens_flat.reshape(original_shape)
 
 def E_tot(H, P, F):
     '''
@@ -77,22 +87,17 @@ def SCF_cycle(H, V, S_inverse_sqrt):
 
 #This is where you change between different atoms.
 nelectrons = 2 # net number of electrons of the entire system
-atomic_masses = [1,2] # the atomic mass of each component
-atomic_coordinates = [np.array([0,0,0]),np.array([0.772,0,0])] # define the separation between the atoms in the compound
+atomic_masses = [1, 1] # the atomic mass of each component
+atomic_coordinates = [np.array([0,0,0]), np.array([1.4, 0, 0])] # define the separation between the atoms in the compound
 
-atomic_masses = [11, 17]
+
 xval = np.arange(0.01, 3, 0.01)
-x3dval = np.array([[i, 0.0, 0.0] for i in xval]) #smart way to calculate at different seperations
-xval = np.arange(0.01, 3, 0.000001)
 #x3dval = np.array([[i, 0.0, 0.0] for i in xval]) #smart way to calculate at different seperations
 Energy = np.zeros([len(xval)])
 
-atomic_coordinates = [np.array([0,0,0]), np.array([3.03, 0, 0])]
 assert len(atomic_coordinates) == len(atomic_masses)
-
     
-nelectrons = 28
-Slater_bases = atoms.Na(atomic_coordinates[0]) + atoms.Cl(atomic_coordinates[1])
+Slater_bases = atoms.H(atomic_coordinates[0]) + atoms.H(atomic_coordinates[1])# also edit this to change the type of atoms in the compound
 nbasis = len(Slater_bases)
 
 S = mat.Overlap_matrix(Slater_bases, nbasis) #Overlap matrix
@@ -109,8 +114,7 @@ S_inverse_sqrt = linalg.sqrtm(linalg.inv(S))
 Density_matrix, Fock_matrix = SCF_cycle(H, V, S_inverse_sqrt)
 print('Density', Density_matrix)
 Energy = E_tot(H, Density_matrix, Fock_matrix)
-print('Energy (Hartrees)', Energy, '\n')
-print('Energy (eV)', Energy*27.2114)
+print('Energy', Energy)
 
 '''
 Energy[i] = E_tot(H, Density_matrix, Fock_matrix)
@@ -121,26 +125,29 @@ plt.ylabel('Energy, Hartrees')
 plt.show()
 '''
 
-xval = np.arange(-3, 3, 0.01)
-points = np.array([[i, 0.0, 0.0] for i in xval])
-edensity=electron_density(points, Density_matrix, Slater_bases)
 
 #---Graph charge density----
-if __name__=='__main__':
-    fig, ax = plt.subplots()
 
-    
-    ax.plot(xval, edensity,label='Electron density')
+fig, ax = plt.subplots()
 
-    plt.xlabel(r'Distance [${\AA}$]')
-    plt.ylabel(r'Electron Density [$e/Bohr^3$]')
-    ax.set_title(r'Electron Density of $HeH+$')
+r = np.arange(-1, 1, 0.1)
+X, Y, Z = np.meshgrid(r, r, r)
+points = np.array([X, Y, Z])
+edensity=electron_density(points, Density_matrix, Slater_bases)
 
-    ax.set_yticks(np.arange(0,max(edensity)*1.01,round(max(edensity)*0.25,1)))
-    ax.set_yticks(np.arange(0,max(edensity)*1.01,max(edensity)*0.025), minor=True)
-    ax.set_xticks(np.arange(-3,3,1/10), minor=True)
-    ax.grid(True,alpha=0.4)
-    ax.set_ylim([min(edensity)-max(edensity)*0.01,max(edensity)+max(edensity)*0.01])
-    ax.set_xlim([-3,3])
-    #plt.savefig('Na',dpi=300)
-    plt.show()
+'''
+ax.plot(xval, edensity,label='Electron density')
+
+plt.xlabel(r'Distance [${\AA}$]')
+plt.ylabel(r'Electron Density [$e/Bohr^3$]')
+ax.set_title(r'Electron Density of $Na$')
+
+ax.set_yticks(np.arange(0,max(edensity)*1.01,round(max(edensity)*0.25,1)))
+ax.set_yticks(np.arange(0,max(edensity)*1.01,max(edensity)*0.025), minor=True)
+ax.set_xticks(np.arange(-3,3,1/10), minor=True)
+ax.grid(True,alpha=0.4)
+ax.set_ylim([min(edensity)-max(edensity)*0.01,max(edensity)+max(edensity)*0.01])
+ax.set_xlim([-3,3])
+plt.savefig('Na',dpi=300)
+plt.show()
+'''
