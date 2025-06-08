@@ -87,8 +87,8 @@ def SCF_cycle(H, V, S_inverse_sqrt):
 
 #This is where you change between different atoms.
 nelectrons = 2 # net number of electrons of the entire system
-atomic_masses = [1, 1] # the atomic mass of each component
-atomic_coordinates = [np.array([0,0,0]), np.array([1.4, 0, 0])] # define the separation between the atoms in the compound
+atomic_masses = [2,1] # the atomic mass of each component
+atomic_coordinates = [np.array([0,0,0]),np.array([0.67,0,0])] # define the separation between the atoms in the compound
 
 
 xval = np.arange(0.01, 3, 0.01)
@@ -97,7 +97,7 @@ Energy = np.zeros([len(xval)])
 
 assert len(atomic_coordinates) == len(atomic_masses)
     
-Slater_bases = atoms.H(atomic_coordinates[0]) + atoms.H(atomic_coordinates[1])# also edit this to change the type of atoms in the compound
+Slater_bases = atoms.H(atomic_coordinates[1]) + atoms.He(atomic_coordinates[0])# also edit this to change the type of atoms in the compound
 nbasis = len(Slater_bases)
 
 S = mat.Overlap_matrix(Slater_bases, nbasis) #Overlap matrix
@@ -125,29 +125,58 @@ plt.ylabel('Energy, Hartrees')
 plt.show()
 '''
 
-
-#---Graph charge density----
-
-fig, ax = plt.subplots()
-
-r = np.arange(-1, 1, 0.1)
-X, Y, Z = np.meshgrid(r, r, r)
+r = np.arange(-3.1, 3.1, 0.1)
+points2 = (r,r,r)
+X, Y, Z = np.meshgrid(*points2,indexing='ij')
 points = np.array([X, Y, Z])
 edensity=electron_density(points, Density_matrix, Slater_bases)
 
-'''
-ax.plot(xval, edensity,label='Electron density')
+if __name__=='__main__':
+    '''bond_length_range = np.arange(0.6,0.9,0.01)
+    minlength=10
+    minen=0
+    bondenergies=[]
+    for i in bond_length_range:
+        atomic_coordinates = [np.array([0,0,0])]
+        assert len(atomic_coordinates) == len(atomic_masses)
+        Slater_bases = atoms.H(atomic_coordinates[0]) + atoms.He(atomic_coordinates[1]) # also edit this to change the type of atoms in the compound
+        nbasis = len(Slater_bases)
+        S = mat.Overlap_matrix(Slater_bases, nbasis) #Overlap matrix
+        T = mat.Kinetic(Slater_bases, nbasis)
+        V_ne = mat.Nuclear_electron(Slater_bases, atomic_coordinates, atomic_masses, nbasis)
+        H = mat.H_core(Slater_bases, atomic_coordinates, atomic_masses, nbasis) #Core hamiltonian
+        V = mat.V_ee(Slater_bases, nbasis) #Electron-electron repulsion
+        S_inverse_sqrt = linalg.sqrtm(linalg.inv(S))
+        Density_matrix, Fock_matrix = SCF_cycle(H, V, S_inverse_sqrt)
+        Energy = E_tot(H, Density_matrix, Fock_matrix)
+        E = E_tot(H,Density_matrix,Fock_matrix)
+        if E<minen:
+            minen=E
+            minlength=i
+        bondenergies.append(E)
+    print('bond energy: ', minen)
+    print('bond length: ', minlength)
+    #plt.plot(bond_length_range,bondenergies)
+    #plt.show()'''
 
-plt.xlabel(r'Distance [${\AA}$]')
-plt.ylabel(r'Electron Density [$e/Bohr^3$]')
-ax.set_title(r'Electron Density of $Na$')
 
-ax.set_yticks(np.arange(0,max(edensity)*1.01,round(max(edensity)*0.25,1)))
-ax.set_yticks(np.arange(0,max(edensity)*1.01,max(edensity)*0.025), minor=True)
-ax.set_xticks(np.arange(-3,3,1/10), minor=True)
-ax.grid(True,alpha=0.4)
-ax.set_ylim([min(edensity)-max(edensity)*0.01,max(edensity)+max(edensity)*0.01])
-ax.set_xlim([-3,3])
-plt.savefig('Na',dpi=300)
-plt.show()
-'''
+    #---Graph charge density----
+
+    fig, ax = plt.subplots()
+
+    edensityx=edensity[:][0][0]
+
+    ax.plot(r, edensityx,label='Electron density')
+
+    plt.xlabel(r'Distance [${\AA}$]')
+    plt.ylabel(r'Electron Density [$e/Bohr^3$]')
+    ax.set_title(r'Electron Density of $HeH$')
+
+    '''ax.set_yticks(np.arange(0,max(edensity)*1.01,round(max(edensity)*0.25,1)))
+    ax.set_yticks(np.arange(0,max(edensity)*1.01,max(edensity)*0.025), minor=True)
+    ax.set_xticks(np.arange(-3,3,1/10), minor=True)
+    ax.grid(True,alpha=0.4)
+    ax.set_ylim([min(edensity)-max(edensity)*0.01,max(edensity)+max(edensity)*0.01])
+    ax.set_xlim([-3,3])'''
+    #plt.savefig('Na',dpi=300)
+    plt.show()
